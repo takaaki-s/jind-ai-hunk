@@ -1,0 +1,37 @@
+schema_version: 2
+
+name: jind-ai-hunk
+version: 0.1.0
+description: Open Hunk for interactive review, then hand your inline notes off to a jin session's agent.
+license: MIT
+homepage: https://github.com/takaaki-s/jind-ai-hunk
+
+# schema_version: 2 (per-action entrypoint, actions[]).
+jin: ">=0.8.0"
+
+install:
+  source:
+    build:
+      - go build -o bin/jind-ai-hunk ./cmd/jind-ai-hunk
+
+# Two manual actions, deliberately split:
+#
+#   open — starts (or reuses) a hunk review for the session's workdir.
+#          The default action: what `jin plugin run jind-ai-hunk` runs.
+#   send — sends the handoff prompt to the target jin session so its agent
+#          picks up your inline notes. Requires a live hunk session for
+#          the workdir (i.e. run `open` first, add notes, then `send`).
+#
+# Notes live in hunk's local daemon and vanish when hunk exits, so send
+# BEFORE closing the hunk window.
+actions:
+  - id: open
+    entrypoint: ./jind-ai-hunk.sh open
+    label: "Open Hunk review"
+
+  - id: send
+    entrypoint: ./jind-ai-hunk.sh send
+    label: "Send review notes to agent"
+
+# One CLI round-trip (send) or one tmux window spawn (open) — 1m is generous.
+timeout: 1m
